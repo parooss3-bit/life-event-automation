@@ -78,8 +78,8 @@ app.use('/api/v1/reminders', require('./routes/reminders').default);
 app.use('/api/v1/gifts', require('./routes/gifts').default);
 app.use('/api/v1/videos', require('./routes/videos').default);
 app.use('/api/v1/subscriptions', require('./routes/subscriptions').default);
-app.use('/api/v1/referrals', require('./routes/referrals').default);
-app.use('/api/v1/partnerships', require('./routes/partnerships').default);
+// app.use('/api/v1/referrals', require('./routes/referrals').default);
+// app.use('/api/v1/partnerships', require('./routes/partnerships').default);
 app.use('/api/v1/admin', require('./routes/admin').default);
 
 // 404 handler
