@@ -198,4 +198,4 @@ router.get(
   }
 );
 
-export default router;outer;
+export default router;

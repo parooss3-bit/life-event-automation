@@ -185,4 +185,4 @@ router.delete(
   }
 );
 
-export default router;outer;
+export default router;

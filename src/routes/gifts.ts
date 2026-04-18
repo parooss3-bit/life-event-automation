@@ -541,4 +541,4 @@ router.get('/budget/:eventId', async (req: AuthRequest, res: Response) => {
   }
 });
 
-export default router;outer;
+export default router;
