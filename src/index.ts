@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import winston from 'winston';
 
 // Load environment variables
+// Force rebuild - v1.0.2
 dotenv.config();
 
 // Ensure DATABASE_URL is set
