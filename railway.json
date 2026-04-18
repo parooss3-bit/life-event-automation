@@ -8,5 +8,6 @@
     "startCommand": "npm start",
     "restartPolicyType": "on_failure",
     "restartPolicyMaxRetries": 5
-  }
+  },
+  "_buildTimestamp": "2026-04-18T19:20:00Z"
 }
