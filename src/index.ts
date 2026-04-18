@@ -8,11 +8,16 @@ import winston from 'winston';
 dotenv.config();
 
 // Ensure DATABASE_URL is set
+console.log('Checking DATABASE_URL...');
 if (!process.env.DATABASE_URL) {
   console.error('ERROR: DATABASE_URL environment variable is not set!');
   console.error('Please set DATABASE_URL in your Railway environment variables.');
+  console.error('NODE_ENV:', process.env.NODE_ENV);
+  const dbVars = Object.keys(process.env).filter(k => k.toUpperCase().includes('DATABASE') || k.toUpperCase().includes('POSTGRES') || k.toUpperCase().includes('DB'));
+  console.error('Available DB-related vars:', dbVars);
   process.exit(1);
 }
+console.log('✓ DATABASE_URL is set');
 
 // Initialize Prisma
 export const prisma = new PrismaClient();
@@ -114,15 +119,19 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 const startServer = async () => {
   try {
     // Test database connection
+    console.log('Attempting to connect to database...');
     await prisma.$connect();
+    console.log('✓ Database connected successfully');
     logger.info('Database connected successfully');
 
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✓ Server running on port ${PORT}`);
       logger.info(`Server running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV}`);
       logger.info(`API URL: ${process.env.API_URL}`);
     });
   } catch (error) {
+    console.error('✗ Failed to start server:', error);
     logger.error('Failed to start server:', error);
     process.exit(1);
   }
