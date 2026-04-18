@@ -7,6 +7,12 @@ import winston from 'winston';
 // Load environment variables
 dotenv.config();
 
+// Ensure DATABASE_URL is set
+if (!process.env.DATABASE_URL) {
+  console.warn('WARNING: DATABASE_URL not set, using placeholder');
+  process.env.DATABASE_URL = 'postgresql://user:password@localhost:5432/life-event-automation';
+}
+
 // Initialize Prisma
 export const prisma = new PrismaClient();
 

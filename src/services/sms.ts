@@ -1,11 +1,18 @@
 import twilio from 'twilio';
 import { logger } from '../index';
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID || '';
-const authToken = process.env.TWILIO_AUTH_TOKEN || '';
+const accountSid = process.env.TWILIO_ACCOUNT_SID || 'AC_PLACEHOLDER';
+const authToken = process.env.TWILIO_AUTH_TOKEN || 'auth_placeholder';
 const fromPhone = process.env.TWILIO_PHONE_NUMBER || '';
 
-const client = twilio(accountSid, authToken);
+let client: any = null;
+try {
+  if (accountSid !== 'AC_PLACEHOLDER' && authToken !== 'auth_placeholder') {
+    client = twilio(accountSid, authToken);
+  }
+} catch (error) {
+  console.warn('Twilio client initialization failed, SMS features disabled');
+}
 
 export interface SMSOptions {
   to: string;
