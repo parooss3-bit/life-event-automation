@@ -81,6 +81,16 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
+// API health check endpoint
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    message: 'API is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
 // API Routes (to be implemented)
 app.use('/api/v1/auth', require('./routes/auth').default);
 app.use('/api/v1/users', require('./routes/users').default);
