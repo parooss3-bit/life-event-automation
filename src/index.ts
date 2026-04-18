@@ -10,14 +10,20 @@ dotenv.config();
 // Ensure DATABASE_URL is set
 console.log('Checking DATABASE_URL...');
 if (!process.env.DATABASE_URL) {
-  console.error('ERROR: DATABASE_URL environment variable is not set!');
-  console.error('Please set DATABASE_URL in your Railway environment variables.');
-  console.error('NODE_ENV:', process.env.NODE_ENV);
-  const dbVars = Object.keys(process.env).filter(k => k.toUpperCase().includes('DATABASE') || k.toUpperCase().includes('POSTGRES') || k.toUpperCase().includes('DB'));
-  console.error('Available DB-related vars:', dbVars);
-  process.exit(1);
+  const postgresPassword = process.env.POSTGRES_PASSWORD;
+  const postgresUser = process.env.POSTGRES_USER || 'postgres';
+  const postgresDb = process.env.POSTGRES_DB || 'railway';
+  
+  if (postgresPassword) {
+    process.env.DATABASE_URL = `postgresql://${postgresUser}:${postgresPassword}@roundhouse.proxy.rlwy.net:44072/${postgresDb}`;
+    console.log('✓ DATABASE_URL constructed from Railway PostgreSQL (public domain)');
+  } else {
+    console.error('ERROR: DATABASE_URL not set and cannot construct from PostgreSQL vars!');
+    process.exit(1);
+  }
+} else {
+  console.log('✓ DATABASE_URL is already set');
 }
-console.log('✓ DATABASE_URL is set');
 
 // Initialize Prisma
 export const prisma = new PrismaClient();
