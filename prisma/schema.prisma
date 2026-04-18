@@ -1,0 +1,337 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users Table
+model User {
+  id                    String      @id @default(cuid())
+  email                 String      @unique
+  passwordHash          String?
+  firstName             String?
+  lastName              String?
+  avatarUrl             String?
+  phone                 String?
+  dateOfBirth           DateTime?
+  timezone              String      @default("UTC")
+  
+  // Subscription
+  subscriptionTier      String      @default("free") // free, pro, business
+  subscriptionStatus    String?     // active, cancelled, paused, expired
+  stripeCustomerId      String?     @unique
+  
+  // OAuth
+  googleId              String?     @unique
+  appleId               String?     @unique
+  facebookId            String?     @unique
+  facebookAccessToken   String?     // Encrypted in production
+  facebookRefreshToken  String?     // Encrypted in production
+  
+  // Preferences
+  emailNotifications    Boolean     @default(true)
+  smsNotifications      Boolean     @default(false)
+  pushNotifications     Boolean     @default(true)
+  marketingEmails       Boolean     @default(true)
+  
+  // Metadata
+  lastLoginAt           DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  deletedAt             DateTime?
+  
+  // Relations
+  contacts              Contact[]
+  events                Event[]
+  reminders             Reminder[]
+  gifts                 Gift[]
+  aiVideos              AIVideo[]
+  subscriptions         Subscription[]
+  referralsGiven        Referral[]  @relation("referrer")
+  referralsReceived     Referral[]  @relation("referred")
+  
+  @@index([email])
+  @@index([subscriptionTier])
+  @@index([createdAt])
+}
+
+// Contacts Table
+model Contact {
+  id                    String      @id @default(cuid())
+  userId                String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  firstName             String
+  lastName              String?
+  email                 String?
+  phone                 String?
+  avatarUrl             String?
+  
+  relationship          String?     // friend, family, colleague, partner, etc.
+  interests             String?     // Comma-separated
+  notes                 String?
+  favoriteGiftType      String?
+  
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  deletedAt             DateTime?
+  
+  // Relations
+  events                Event[]
+  gifts                 Gift[]
+  aiVideos              AIVideo[]
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Events Table
+model Event {
+  id                    String      @id @default(cuid())
+  userId                String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  contactId             String
+  contact               Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  eventType             String      // birthday, anniversary, graduation, new_home, etc.
+  title                 String
+  description           String?
+  eventDate             DateTime
+  
+  isRecurring           Boolean     @default(false)
+  recurrencePattern     String?     // yearly, monthly, weekly
+  recurrenceEndDate     DateTime?
+  
+  reminderDaysBefore    Int         @default(14)
+  reminderTime          String      @default("09:00:00")
+  
+  isCompleted           Boolean     @default(false)
+  completedAt           DateTime?
+  
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  deletedAt             DateTime?
+  
+  // Relations
+  reminders             Reminder[]
+  gifts                 Gift[]
+  aiVideos              AIVideo[]
+  
+  @@index([userId])
+  @@index([eventDate])
+  @@index([eventType])
+  @@index([isRecurring])
+}
+
+// Reminders Table
+model Reminder {
+  id                    String      @id @default(cuid())
+  eventId               String
+  event                 Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  userId                String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  reminderType          String      // email, sms, push, in_app
+  reminderDate          DateTime
+  reminderNumber        Int         @default(1)
+  
+  status                String      @default("pending") // pending, sent, failed, bounced
+  sentAt                DateTime?
+  openedAt              DateTime?
+  clickedAt             DateTime?
+  
+  errorMessage          String?
+  errorCode             String?
+  
+  emailId               String?     // SendGrid message ID
+  
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  
+  @@index([userId])
+  @@index([reminderDate])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Gifts Table
+model Gift {
+  id                    String      @id @default(cuid())
+  userId                String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  eventId               String
+  event                 Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  contactId             String
+  contact               Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  giftName              String
+  giftDescription       String?
+  giftCategory          String?     // food, tech, experience, jewelry, etc.
+  
+  giftPrice             Decimal     @db.Decimal(10, 2)
+  giftCurrency          String      @default("USD")
+  giftUrl               String?
+  giftSource            String?     // amazon, etsy, local_store, etc.
+  
+  affiliateUrl          String?
+  affiliateSource       String?     // amazon, shareasale, etc.
+  
+  status                String      @default("idea") // idea, purchased, shipped, delivered
+  purchasedAt           DateTime?
+  shippedAt             DateTime?
+  deliveredAt           DateTime?
+  
+  notes                 String?
+  recipientFeedback     String?
+  
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  deletedAt             DateTime?
+  
+  @@index([userId])
+  @@index([eventId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// AI Videos Table
+model AIVideo {
+  id                    String      @id @default(cuid())
+  userId                String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  eventId               String
+  event                 Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  contactId             String
+  contact               Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  videoTitle            String?
+  videoDescription      String?
+  videoScript           String
+  avatarStyle           String?     // realistic, animated, cartoon, etc.
+  
+  heyGenVideoId         String?
+  heyGenStatus          String?     // pending, processing, ready, failed
+  
+  videoUrl              String?
+  videoDurationSeconds  Int?
+  videoSizeMb           Decimal?    @db.Decimal(10, 2)
+  
+  deliveryMethod        String?     // email, physical_card, social_media, qr_code
+  
+  status                String      @default("pending") // pending, processing, ready, sent, failed
+  sentAt                DateTime?
+  viewedAt              DateTime?
+  
+  errorMessage          String?
+  
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  deletedAt             DateTime?
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Subscriptions Table
+model Subscription {
+  id                    String      @id @default(cuid())
+  userId                String      @unique
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  stripeSubscriptionId  String?     @unique
+  stripePriceId         String?
+  
+  planId                String      // free, pro, business
+  status                String      // active, cancelled, paused, expired
+  
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  
+  cancelAt              DateTime?
+  cancelledAt           DateTime?
+  cancellationReason    String?
+  
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([currentPeriodEnd])
+}
+
+// Referrals Table
+model Referral {
+  id                    String      @id @default(cuid())
+  referrerId            String
+  referrer              User        @relation("referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  
+  referredEmail         String
+  referredUserId        String?
+  referredUser          User?       @relation("referred", fields: [referredUserId], references: [id], onDelete: SetNull)
+  
+  status                String      @default("pending") // pending, completed, expired
+  
+  creditAmount          Decimal     @default(0) @db.Decimal(10, 2)
+  creditAppliedAt       DateTime?
+  
+  createdAt             DateTime    @default(now())
+  completedAt           DateTime?
+  expiredAt             DateTime?
+  
+  @@index([referrerId])
+  @@index([referredEmail])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Brand Partnerships Table
+model BrandPartnership {
+  id                    String      @id @default(cuid())
+  
+  brandName             String
+  brandLogoUrl          String?
+  brandWebsite          String?
+  brandEmail            String?
+  contactPerson         String?
+  
+  dealTitle             String
+  dealDescription       String?
+  dealCategory          String?     // birthday, anniversary, new_home, etc.
+  
+  discountPercentage    Int?
+  discountAmount        Decimal?    @db.Decimal(10, 2)
+  discountCode          String?
+  
+  dealUrl               String?
+  dealStartDate         DateTime?
+  dealEndDate           DateTime?
+  
+  featuredPlacementPrice Decimal?   @db.Decimal(10, 2)
+  featuredPlacementStartDate DateTime?
+  featuredPlacementEndDate DateTime?
+  
+  isActive              Boolean     @default(true)
+  isFeatured            Boolean     @default(false)
+  
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  
+  @@index([brandName])
+  @@index([dealCategory])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([createdAt])
+}
