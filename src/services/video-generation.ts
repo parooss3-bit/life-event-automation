@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { prisma } from '../lib/prisma';
+import { prisma } from '../index';
 
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 const HEYGEN_API_BASE = 'https://api.heygen.com/v1';
